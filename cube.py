@@ -24,16 +24,17 @@ D = 'D'
 
 
 class Piece(object):
+	# a piece that has 0 or 1 or 2 or 3 colored surfaces
 
-	def __init__(self, cx, cy=None, cz=None):
-		self.colors = []
-		for color in (cx, cy, cz):
-			self.colors.append(color)
+	# cx, cy, cz represent the color in the x, y, z direction respectively
+	def __init__(self, cx, cy, cz):
+		self.colors = [cx, cy, cz]
 		self._set_type()
 
 	def __str__(self):
 		return '[' + self.type + '	' + ''.join(c if c else 'X' for c in self.colors) + ']'
 
+	# determine if this is a corner, an edge, a face, or a center piece
 	def _set_type(self):
 		no_color = self.colors.count(None)
 		if no_color == 2:
@@ -45,6 +46,7 @@ class Piece(object):
 		else:
 			self.type = 'center'
 
+	# rotate the piece around an axis
 	def rotate(self, axis):
 		if axis == ax:
 			self.colors = [self.colors[ax], self.colors[az], self.colors[ay]]
@@ -53,9 +55,15 @@ class Piece(object):
 		elif axis == az:
 			self.colors = [self.colors[ay], self.colors[ax], self.colors[az]]
 
+	# change the surface colors without changing orientation
+	def update_surface(self, cx, cy, cz):
+		self.colors = [cx, cy, cz]
+
 
 class Cube(object):
+	# a rubik's cube represented by 27 Piece object in a list
 
+	# initialize a cube in the solved state
 	def __init__(self):
 		self._state = []
 		for i in range(27):
@@ -97,6 +105,7 @@ class Cube(object):
 				re += '\n'
 		return re
 
+	# return a string consisting of colors of a face
 	def get_face(self, face):
 		if face == F:
 			return ''.join(piece.colors[az] for piece in self._front)
@@ -128,9 +137,7 @@ class Cube(object):
 	# def rotate(self, face):
 
 
-
-
-
-c1 = Cube()
-print(c1)
-print('solved' if c1.is_solved() else 'not solved')
+if __name__ == "__main__":
+	c1 = Cube()
+	print(c1)
+	print('solved' if c1.is_solved() else 'not solved')
