@@ -1,4 +1,3 @@
-
 # color
 w = 'w'
 r = 'r'
@@ -7,12 +6,10 @@ b = 'b'
 o = 'o'
 y = 'y'
 
-
 # orientation
-ax = 0  # right
-ay = 1  # top
-az = 2  # front
-
+X = 0  # right
+Y = 1  # top
+Z = 2  # front
 
 # face
 F = 'F'
@@ -29,35 +26,22 @@ class Piece(object):
 	# cx, cy, cz represent the color in the x, y, z direction respectively
 	def __init__(self, cx, cy, cz):
 		self.colors = [cx, cy, cz]
-		self._set_type()
 
 	def __str__(self):
-		return '[' + self.type + '	' + ''.join(c if c else 'X' for c in self.colors) + ']'
-
-	# determine if this is a corner, an edge, a face, or a center piece
-	def _set_type(self):
-		no_color = self.colors.count(None)
-		if no_color == 2:
-			self.type = 'face'
-		elif no_color == 1:
-			self.type = 'edge'
-		elif no_color == 0:
-			self.type = 'corner'
-		else:
-			self.type = 'center'
+		return '[' + ''.join(c if c else 'X' for c in self.colors) + ']'
 
 	# rotate the piece around an axis
 	def rotate(self, axis):
-		if axis == ax:
-			self.colors = [self.colors[ax], self.colors[az], self.colors[ay]]
-		elif axis == ay:
-			self.colors = [self.colors[az], self.colors[ay], self.colors[ax]]
-		elif axis == az:
-			self.colors = [self.colors[ay], self.colors[ax], self.colors[az]]
+		if axis == X:
+			self.colors = [self.colors[X], self.colors[Z], self.colors[Y]]
+		elif axis == Y:
+			self.colors = [self.colors[Z], self.colors[Y], self.colors[X]]
+		elif axis == Z:
+			self.colors = [self.colors[Y], self.colors[X], self.colors[Z]]
 
 	# change the surface colors without changing orientation
-	def update_surface(self, cx, cy, cz):
-		self.colors = [cx, cy, cz]
+	def update_colors(self, new_color):
+		self.colors = new_color
 
 
 class Cube(object):
@@ -83,15 +67,19 @@ class Cube(object):
 				cy = y
 
 			self._state.append(Piece(cx, cy, cz))
-		self._update()
 
-	def _update(self):
-		self._front = [self._state[i] for i in range(9)]
-		self._back = [self._state[i] for i in range(18, 27)]
-		self._left = [self._state[i] for i in range(0, 27, 3)]
-		self._right = [self._state[i] for i in range(2, 27, 3)]
-		self._up = [self._state[i] for i in range(27) if i % 9 < 3]
-		self._down = [self._state[i] for i in range(27) if i % 9 > 5]
+		self._front = [self._state[i] for i in (0, 1, 2, 5, 8, 7, 6, 3, 4)]
+		self._back = [self._state[i] for i in (20, 19, 18, 21, 24, 25, 26, 23, 22)]
+		self._left = [self._state[i] for i in (18, 9, 0, 3, 6, 15, 24, 21, 12)]
+		self._right = [self._state[i] for i in (2, 11, 20, 23, 26, 17, 8, 5, 14)]
+		self._up = [self._state[i] for i in (18, 19, 20, 11, 2, 1, 0, 9, 10)]
+		self._down = [self._state[i] for i in (6, 7, 8, 17, 26, 25, 24, 15, 16)]
+
+		self._face_dict = {
+			F: (self._front, Z), B: (self._back, Z),
+			L: (self._left, X), R: (self._right, X),
+			U: (self._up, Y), D: (self._down, Y)
+		}
 
 	def __str__(self):
 		re = ''
@@ -107,34 +95,29 @@ class Cube(object):
 
 	# return a string consisting of colors of a face
 	def get_face(self, face):
-		if face == F:
-			return ''.join(piece.colors[az] for piece in self._front)
-		elif face == B:
-			return ''.join(piece.colors[az] for piece in self._back)
-		elif face == L:
-			return ''.join(piece.colors[ax] for piece in self._left)
-		elif face == R:
-			return ''.join(piece.colors[ax] for piece in self._right)
-		elif face == U:
-			return ''.join(piece.colors[ay] for piece in self._up)
-		elif face == D:
-			return ''.join(piece.colors[ay] for piece in self._down)
-
-	def _is_face_solved(self, face):
-		face_s = self.get_face(face)
-		c = face_s[0]
-		for i in face_s:
-			if i != c:
-				return False
-		return True
+		face_s = self._face_dict[face][0]
+		axis = self._face_dict[face][1]
+		return ''.join(piece.colors[axis] for piece in face_s)
 
 	def is_solved(self):
 		for face in (F, B, L, R, U, D):
-			if not self._is_face_solved(face):
-				return False
+			face_s = self.get_face(face)
+			c = face_s[-1]
+			for i in face_s:
+				# print(i)
+				if i != c:
+					return False
 		return True
 
-	# def rotate(self, face):
+	def rotate(self, face):
+		shift = 2 if '\'' in face else -2
+		face_s = self._face_dict[face[0]][0]
+		axis = self._face_dict[face[0]][1]
+		face_ref = [face_s[(i + shift) % 8].colors for i in range(8)]
+		for i in range(8):
+			face_s[i].update_colors(face_ref[i])
+			face_s[i].rotate(axis)
+	# li2 = [li2[0]] + [li2[(i + 2) % 9] for i in range(1, 9)]
 
 
 if __name__ == "__main__":
