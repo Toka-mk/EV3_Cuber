@@ -45,7 +45,20 @@ class Piece(object):
 
 
 class Cube(object):
-	# a rubik's cube represented by 27 Piece object in a list
+	"""
+	a rubik's cube represented by 27 Piece object in a list arranged in the following order:
+
+	 front		 middle		 back
+	0  1  2		9  10 11	18 19 20
+	3  4  5		12 13 14	21 22 23
+	6  7  8		15 16 17	24 25 26
+
+	six lists (_front, _back, _left, etc.) that store the pieces on a specific face
+	starting from the top-left and continues clock-wise,
+	with the center piece at the end of the list
+	e.g.: _front = [0, 1, 2, 5, 8, 7, 6, 3, 4]
+
+	"""
 
 	# initialize a cube in the solved state
 	def __init__(self):
@@ -68,6 +81,7 @@ class Cube(object):
 
 			self._state.append(Piece(cx, cy, cz))
 
+		#
 		self._front = [self._state[i] for i in (0, 1, 2, 5, 8, 7, 6, 3, 4)]
 		self._back = [self._state[i] for i in (20, 19, 18, 21, 24, 25, 26, 23, 22)]
 		self._left = [self._state[i] for i in (18, 9, 0, 3, 6, 15, 24, 21, 12)]
@@ -117,7 +131,6 @@ class Cube(object):
 		for i in range(8):
 			face_s[i].update_colors(face_ref[i])
 			face_s[i].rotate(axis)
-	# li2 = [li2[0]] + [li2[(i + 2) % 9] for i in range(1, 9)]
 
 
 if __name__ == "__main__":
