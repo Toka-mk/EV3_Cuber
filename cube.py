@@ -31,7 +31,7 @@ class Cubie(object):
 		self.colors = [cx, cy, cz]
 
 	def __str__(self):
-		return '[' + ''.join(c if c else 'X' for c in self.colors) + ']'
+		return '[' + ''.join(c if c else ' ' for c in self.colors) + ']'
 
 	# rotate the piece around an axis
 	def rotate(self, axis):
@@ -106,7 +106,7 @@ class Cube(object):
 			line += self.get_face(face)
 		return line
 
-	def print_graph(self, p=True):
+	def graph(self, p=True):
 		graph = ''
 		line = self.__str__()
 		for i in range(3):
@@ -130,10 +130,20 @@ class Cube(object):
 			return graph
 
 	# return a string consisting of colors of a face
-	def get_face(self, face):
+	def get_face(self, face, side=False):
 		face_s = self._face_dict[face][0]
-		axis = self._face_dict[face][1]
-		return ''.join(face_s[i].colors[axis] for i in (0, 1, 2, 7, 8, 3, 6, 5, 4))
+		if not side:
+			axis = self._face_dict[face][1]
+			return ''.join(face_s[i].colors[axis] for i in (0, 1, 2, 7, 8, 3, 6, 5, 4))
+		else:
+			# for i, cubie in enumerate(face_s):
+			re = ''
+			for i in range(0, 8, 2):
+				axis = X if i % 4 == 2 else Z
+				for j in range(3):
+					# print(i, j, axis, face_s[i+j].colors)
+					re += face_s[i+j if i+j < 8 else 0].colors[axis]
+			return re
 
 	def is_solved(self):
 		for face in self._face_dict.keys():
@@ -160,6 +170,10 @@ class Cube(object):
 
 		if '2' in face:
 			self.turn(face[:-1])
+
+	def turn_formula(self, formula):
+		for move in formula:
+			self.turn(move)
 
 	def rotate_y(self, cw=True):
 		shift = 0;
@@ -189,9 +203,10 @@ class Cube(object):
 
 if __name__ == '__main__':
 	c1 = Cube()
-	c1.print_graph()
+	c1.graph()
 	print('solved\n' if c1.is_solved() else 'not solved')
 	print(' '.join(x for x in c1.scramble()))
-	c1.print_graph()
+	print(c1.get_face(U, True))
+	c1.graph()
 	print(c1)
 	print('solved' if c1.is_solved() else 'not solved')

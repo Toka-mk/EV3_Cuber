@@ -130,3 +130,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+
+!venv_w/Lib/site-packages/rubik_solver/Solver/CFOP/__init__.py
