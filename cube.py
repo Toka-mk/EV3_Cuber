@@ -1,3 +1,6 @@
+import random
+
+
 # color
 w = 'w'
 r = 'r'
@@ -20,7 +23,7 @@ U = 'U'
 D = 'D'
 
 
-class Piece(object):
+class Cubie(object):
 	# a piece that has 0 or 1 or 2 or 3 colored surfaces
 
 	# cx, cy, cz represent the color in the x, y, z direction respectively
@@ -46,48 +49,50 @@ class Piece(object):
 
 class Cube(object):
 	"""
-	a rubik's cube represented by 27 Piece object in a list arranged in the following order:
+	a rubik's cube represented by 27 Piece objects in a list arranged in the following order:
 
-	 front		 middle		 back
+	front		middle		back
 	0  1  2		9  10 11	18 19 20
 	3  4  5		12 13 14	21 22 23
 	6  7  8		15 16 17	24 25 26
 
-	six lists (_front, _back, _left, etc.) that store the pieces on a specific face
+	six lists (_front, _back, _left, etc.) store the pieces on their respective face
 	starting from the top-left and continues clock-wise,
 	with the center piece at the end of the list
 	e.g.: _front = [0, 1, 2, 5, 8, 7, 6, 3, 4]
-
 	"""
 
 	# initialize a cube in the solved state
-	def __init__(self):
+	def __init__(self, state=None):
+		self._orientation = [X, Y, Z]
 		self._state = []
-		for i in range(27):
-			cx = cy = cz = None
 
-			if i % 3 == 0:
-				cx = g
-			elif i % 3 == 2:
-				cx = b
-			if i < 9:
-				cz = r
-			elif i > 17:
-				cz = o
-			if i % 9 < 3:
-				cy = w
-			elif i % 9 > 5:
-				cy = y
+		if not state:
+			for i in range(27):
+				cx = cy = cz = None
 
-			self._state.append(Piece(cx, cy, cz))
+				if i % 3 == 0:  # left
+					cx = b
+				elif i % 3 == 2:  # right
+					cx = g
+				if i < 9:  # front
+					cz = r
+				elif i > 17:  # back
+					cz = o
+				if i % 9 < 3:  # up
+					cy = y
+				elif i % 9 > 5:  # down
+					cy = w
 
-		#
+				self._state.append(Cubie(cx, cy, cz))
+
 		self._front = [self._state[i] for i in (0, 1, 2, 5, 8, 7, 6, 3, 4)]
 		self._back = [self._state[i] for i in (20, 19, 18, 21, 24, 25, 26, 23, 22)]
 		self._left = [self._state[i] for i in (18, 9, 0, 3, 6, 15, 24, 21, 12)]
 		self._right = [self._state[i] for i in (2, 11, 20, 23, 26, 17, 8, 5, 14)]
 		self._up = [self._state[i] for i in (18, 19, 20, 11, 2, 1, 0, 9, 10)]
 		self._down = [self._state[i] for i in (6, 7, 8, 17, 26, 25, 24, 15, 16)]
+		self._equator = [self._state[i] for i in (3, 4, 5, 14, 23, 22, 21, 12, 13)]
 
 		self._face_dict = {
 			F: (self._front, Z), B: (self._back, Z),
@@ -96,44 +101,97 @@ class Cube(object):
 		}
 
 	def __str__(self):
-		re = ''
-		for i in range(27):
-			re += str(self._state[i])
-			if i % 3 == 2:
-				re += '\n'
-			else:
-				re += ' || '
-			if i % 9 == 8:
-				re += '\n'
-		return re
+		line = ''
+		for face in (U, L, F, R, B, D):
+			line += self.get_face(face)
+		return line
+
+	def print_graph(self, p=True):
+		graph = ''
+		line = self.__str__()
+		for i in range(3):
+			graph += '         '
+			for color in [x for x in line[i*3:i*3+3]]:
+				graph += ' ' + color + ' '
+			graph += '\n'
+		for i in range(3):
+			for j in range(4):
+				for color in [x for x in line[j*9+i*3+9:j*9+i*3+12]]:
+					graph += ' ' + color + ' '
+			graph += '\n'
+		for i in range(3):
+			graph += '         '
+			for color in [x for x in line[i*3+45:i*3+48]]:
+				graph += ' ' + color + ' '
+			graph += '\n'
+		if p:
+			print(graph)
+		else:
+			return graph
 
 	# return a string consisting of colors of a face
 	def get_face(self, face):
 		face_s = self._face_dict[face][0]
 		axis = self._face_dict[face][1]
-		return ''.join(piece.colors[axis] for piece in face_s)
+		return ''.join(face_s[i].colors[axis] for i in (0, 1, 2, 7, 8, 3, 6, 5, 4))
 
 	def is_solved(self):
-		for face in (F, B, L, R, U, D):
+		for face in self._face_dict.keys():
 			face_s = self.get_face(face)
-			c = face_s[-1]
-			for i in face_s:
+			c = face_s[0]
+			for i in face_s[1:]:
 				# print(i)
 				if i != c:
 					return False
 		return True
 
-	def rotate(self, face):
-		shift = 2 if '\'' in face else -2
+	def turn(self, face):
+		if 'Y' in face:
+			self.rotate_y(False if "'" in face else True)
+			return
+
+		shift = 2 if "'" in face else -2
 		face_s = self._face_dict[face[0]][0]
 		axis = self._face_dict[face[0]][1]
 		face_ref = [face_s[(i + shift) % 8].colors for i in range(8)]
-		for i in range(8):
-			face_s[i].update_colors(face_ref[i])
-			face_s[i].rotate(axis)
+		for color, color_new in zip(face_s[:-1], face_ref):
+			color.update_colors(color_new)
+			color.rotate(axis)
+
+		if '2' in face:
+			self.turn(face[:-1])
+
+	def rotate_y(self, cw=True):
+		shift = 0;
+		if cw:
+			self.turn(U)
+			self.turn("D'")
+			shift = 2
+		else:
+			self.turn("U'")
+			self.turn(D)
+			shift = -2
+		cubies = self._equator
+		cubies_ref = [cubies[(i + shift) % 8].colors for i in range(8)]
+		for color, color_new in zip(cubies[:-1], cubies_ref):
+			color.update_colors(color_new)
+			color.rotate(Y)
+
+	def scramble(self, turns=10):
+		p = []
+		for i in range(turns):
+			move = random.choice(list(self._face_dict.keys()))
+			move += random.choice(["'", ''])
+			self.turn(move)
+			p.append(move)
+		return p
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
 	c1 = Cube()
+	c1.print_graph()
+	print('solved\n' if c1.is_solved() else 'not solved')
+	print(' '.join(x for x in c1.scramble()))
+	c1.print_graph()
 	print(c1)
 	print('solved' if c1.is_solved() else 'not solved')
