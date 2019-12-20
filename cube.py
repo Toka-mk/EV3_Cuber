@@ -158,6 +158,8 @@ class Cube(object):
 	def turn(self, face):
 		if 'Y' in face:
 			self.rotate_y(False if "'" in face else True)
+			if '2' in face:
+				self.rotate_y(False if "'" in face else True)
 			return
 
 		shift = 2 if "'" in face else -2

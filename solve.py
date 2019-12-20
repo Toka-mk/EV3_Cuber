@@ -124,7 +124,6 @@ def pll(cube):
 
 
 def simplify(s):
-	print(s)
 	for i in range(0, len(s) - 1):
 		if i >= len(s) - 1:
 			break
@@ -150,12 +149,11 @@ def simplify(s):
 					i -= 1
 				else:
 					s[i] += "2"
-	print(s)
 
 
 def solution(cube):
 	s = f2l(cube) + yellow_cross(cube) + oll(cube) + pll(cube)
-	# simplify(s)
+	simplify(s)
 	return s
 
 
@@ -166,5 +164,6 @@ if __name__ == '__main__':
 	d.turn_formula(scram)
 	d.graph()
 	solution = solution(c)
+	print(solution)
 	d.turn_formula(solution)
 	d.graph()
