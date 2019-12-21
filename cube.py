@@ -100,11 +100,14 @@ class Cube(object):
 			U: (self._up, Y), D: (self._down, Y)
 		}
 
+		self._face_order = (U, L, F, R, B, D)
+
 	def __str__(self):
-		line = ''
-		for face in (U, L, F, R, B, D):
-			line += self.get_face(face)
-		return line
+		return ''.join(self.get_face(x) for x in self._face_order)
+
+	def read(self, s):
+		for i, face in enumerate(self._face_order):
+			self.set_face(face, s[i*9:(i+1)*9])
 
 	def graph(self, p=True):
 		graph = ''
@@ -144,6 +147,12 @@ class Cube(object):
 					# print(i, j, axis, face_s[i+j].colors)
 					re += face_s[i+j if i+j < 8 else 0].colors[axis]
 			return re
+
+	def set_face(self, face, s):
+		face_s = self._face_dict[face][0]
+		axis = self._face_dict[face][1]
+		for i, j in zip((0, 1, 2, 7, 8, 3, 6, 5, 4), range(9)):
+			face_s[i].colors[axis] = s[j]
 
 	def is_solved(self):
 		for face in self._face_dict.keys():
@@ -193,10 +202,13 @@ class Cube(object):
 			color.update_colors(color_new)
 			color.rotate(Y)
 
-	def scramble(self, turns=10):
+	def scramble(self, turns=10, by_hand=False):
 		p = []
 		for i in range(turns):
-			move = random.choice(list(self._face_dict.keys()))
+			move_pool = [F, B, L, R, U]
+			if by_hand:
+				move_pool.append(D)
+			move = random.choice(move_pool)
 			move += random.choice(["'", ''])
 			self.turn(move)
 			p.append(move)

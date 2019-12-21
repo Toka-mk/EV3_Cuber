@@ -160,7 +160,9 @@ def solution(cube):
 if __name__ == '__main__':
 	c = Cube()
 	d = Cube()
-	scram = c.scramble(30)
+	scram = c.scramble(20)
+	simplify(scram)
+	print('  '.join(x for x in scram))
 	d.turn_formula(scram)
 	d.graph()
 	solution = solution(c)
