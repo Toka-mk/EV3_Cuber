@@ -164,6 +164,6 @@ if __name__ == '__main__':
 	d.turn_formula(scram)
 	d.graph()
 	solution = solution(c)
-	print(solution)
+	print('  '.join(x for x in solution))
 	d.turn_formula(solution)
 	d.graph()
