@@ -1,14 +1,10 @@
-from rubik_solver import utils
 from cube import *
 
 c = Cube()
-c.scramble(30)
 print(c)
 c.graph()
 
-solve = utils.solve(c.__str__())
-print(solve)
+c.read("byrwyrwogybogbryrbgbowrgoooyywygobobgbrworrgrygwbwygww")
 
-for move in solve:
-	c.turn(move.raw)
+print(c)
 c.graph()
